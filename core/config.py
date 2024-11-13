@@ -13,7 +13,7 @@ class Settings(BaseSettings, frozen=True):
     election_base_url: str = "https://newess.shailoo.gov.kg/api/election/"
     mongo_url: MongoDsn
     election_db_name: str = "election"
-    voices_collection: str = "party_voices"
+    votes_collection: str = "votes"
     cities_json_file: Path = BASE_DIR / "static/cities.json"
 
     model_config = SettingsConfigDict(env_file=BASE_DIR / ".env")

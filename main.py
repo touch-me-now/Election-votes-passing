@@ -65,7 +65,7 @@ class Item(BaseModel):
     update_ts: float
 
 
-async def parse_party_voices():
+async def parse_party_votes():
     api_client = ElectionAPIClient(election_id=settings.election_id)
 
     cities = get_cities()
@@ -113,14 +113,14 @@ async def parse_party_voices():
 
 
 async def main():
-    logging.info("Start parse party voices...")
-    items = await parse_party_voices()
+    logging.info("Start parse party votes...")
+    items = await parse_party_votes()
 
     if items:
         logging.info("Saving items...")
 
         await upsert_mongo_docs(
-            collection_name=settings.voices_collection,
+            collection_name=settings.votes_collection,
             docs=items,
             fields=("name", "region_id", "city_slug")
         )
