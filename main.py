@@ -17,7 +17,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler(settings.log_file_path)
+        # logging.FileHandler(settings.log_file_path)
     ]
 )
 
@@ -129,8 +129,18 @@ async def main():
         logging.error("Not found any items!")
 
 
+async def test_mongo_connection():
+    client = motor_asyncio.AsyncIOMotorClient(str(settings.mongo_url))
+    try:
+        # Проверка списка баз данных для теста соединения
+        databases = await client.list_database_names()
+        logging.info(f"Available databases: {databases}")
+    except Exception as e:
+        logging.error(f"Failed to connect to MongoDB: {e}")
+
+
 if __name__ == "__main__":
     import asyncio
 
-    asyncio.run(main())
+    asyncio.run(test_mongo_connection())
 
