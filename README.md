@@ -34,3 +34,12 @@ docker run -d --name cron-job-container cron-python-job
 python3 main.py
 ```
 
+### Cron logs 
+```bash
+docker exec cron-job-container tail -f /var/log/cron.log
+```
+
+### App logs 
+```bash
+docker exec cron-job-container tail -f /var/log/app.log
+```
