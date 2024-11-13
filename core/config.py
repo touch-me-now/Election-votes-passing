@@ -15,6 +15,7 @@ class Settings(BaseSettings, frozen=True):
     election_db_name: str = "election"
     votes_collection: str = "votes"
     cities_json_file: Path = BASE_DIR / "static/cities.json"
+    log_file_path: Path = BASE_DIR / "app.log"
 
     model_config = SettingsConfigDict(env_file=BASE_DIR / ".env")
 
