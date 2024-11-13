@@ -10,8 +10,8 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-#RUN #echo "0 * * * * python3 main.py >> /var/log/cron.log 2>&1" > /etc/cron.d/my_cron_job
-RUN echo "*/2 * * * * /usr/local/bin/python3 /app/main.py >> /var/log/cron.log 2>&1" > /etc/cron.d/my_cron_job
+RUN echo "0 * * * * /usr/local/bin/python3 /app/main.py >> /var/log/cron.log 2>&1" > /etc/cron.d/my_cron_job
+#RUN echo "*/2 * * * * /usr/local/bin/python3 /app/main.py >> /var/log/cron.log 2>&1" > /etc/cron.d/my_cron_job
 
 RUN chmod 0644 /etc/cron.d/my_cron_job
 RUN crontab /etc/cron.d/my_cron_job
