@@ -9,6 +9,7 @@ from utils import convert_party_slug
 
 timeout = httpx.Timeout(120.0, connect=60.0)
 client = httpx.AsyncClient(headers={"Content-Type": "text"}, timeout=timeout)
+BASE_URL = "https://talapker.shailoo.gov.kg"
 
 
 async def extract_parties(city_url: str):
@@ -28,7 +29,7 @@ async def extract_parties(city_url: str):
 
         collected.append(
             {
-                "img": img.get("src"),
+                "img": BASE_URL + img.get("src"),
                 "name": original_party,
                 "slug": slug
             }
@@ -39,16 +40,15 @@ async def extract_parties(city_url: str):
 
 
 async def extract():
-    base_url = "https://talapker.shailoo.gov.kg"
     # ky required because in election scraping parties has ky names
-    resp = await client.get(url=base_url + "/ky/kenesh_gor")
+    resp = await client.get(url=BASE_URL + "/ky/kenesh_gor")
     resp.raise_for_status()
 
     city_urls = fromstring(resp.text).xpath('//a[@class="kenesh__card"]/@href')
     collected = []
 
     for path in city_urls:
-        url = base_url + path
+        url = BASE_URL + path
 
         r = await client.get(url)
         if r.status_code != 200:
