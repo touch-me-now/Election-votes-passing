@@ -1,16 +1,13 @@
-import json
 import logging
 import sys
 from datetime import datetime
-from typing import Iterable
 
-from motor import motor_asyncio
 from pydantic import BaseModel
-from pymongo import UpdateOne
 
 from core.api_clients import ElectionAPIClient
 from core.config import settings
-
+from db import upsert_mongo_docs, get_cities
+from utils import convert_party_slug
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -21,42 +18,9 @@ logging.basicConfig(
     ]
 )
 
-mongo_client = motor_asyncio.AsyncIOMotorClient(str(settings.mongo_url))
-db = getattr(mongo_client, settings.election_db_name)
-
-
-async def upsert_mongo_docs(collection_name: str, docs: list[dict], fields: Iterable[str]):
-    collection = getattr(db, collection_name)
-
-    fields = set(fields)
-    operations = []
-
-    for doc in docs:
-        if all(field in doc for field in fields):
-            filter_criteria = {field: doc[field] for field in fields if field in doc}
-            logging.debug(f"Filter criteria: {filter_criteria} for document: {doc}")
-
-            operations.append(
-                UpdateOne(
-                    {field: doc[field] for field in fields},
-                    {"$set": doc},
-                    upsert=True
-                )
-            )
-        else:
-            logging.warning(f"Document missing required fields: {doc}")
-
-    if operations:
-        result = await collection.bulk_write(operations)
-        logging.info(f"Modified: {result.modified_count}, Upserted: {result.upserted_count}")
-
-
-def get_cities():
-    with open(settings.cities_json_file) as file:
-        return json.load(file)
-
 
 class Item(BaseModel):
+    party_slug: str
     name: str
     position: int
     region_id: int
@@ -69,7 +33,7 @@ class Item(BaseModel):
 async def parse_party_votes():
     api_client = ElectionAPIClient(election_id=settings.election_id)
 
-    cities = get_cities()
+    cities = await get_cities()
     collected_items = []
 
     for city_meta in cities:
@@ -97,6 +61,7 @@ async def parse_party_votes():
         ballots = [
             dict(
                 Item(
+                    party_slug=convert_party_slug(b["name_ky"] or b["name_ru"]),
                     name=b["name_ky"] or b["name_ru"],
                     position=b["position"],
                     region_id=region_id,
@@ -129,18 +94,8 @@ async def main():
         logging.error("Not found any items!")
 
 
-async def test_mongo_connection():
-    client = motor_asyncio.AsyncIOMotorClient(str(settings.mongo_url))
-    try:
-        # Проверка списка баз данных для теста соединения
-        databases = await client.list_database_names()
-        logging.info(f"Available databases: {databases}")
-    except Exception as e:
-        logging.error(f"Failed to connect to MongoDB: {e}")
-
-
 if __name__ == "__main__":
     import asyncio
 
-    asyncio.run(test_mongo_connection())
+    asyncio.run(main())
 
