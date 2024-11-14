@@ -1,9 +1,7 @@
 import logging
-import re
 
 import httpx
 from lxml.html import fromstring
-from unidecode import unidecode
 
 from core.config import settings
 from db import upsert_mongo_docs
