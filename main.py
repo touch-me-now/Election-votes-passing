@@ -9,14 +9,14 @@ from core.config import settings
 from db import upsert_mongo_docs, get_cities
 from utils import convert_party_slug
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        # logging.FileHandler(settings.log_file_path)
-    ]
-)
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format="%(asctime)s [%(levelname)s] %(message)s",
+#     handlers=[
+#         logging.StreamHandler(sys.stdout),
+#         # logging.FileHandler(settings.log_file_path)
+#     ]
+# )
 
 
 class Item(BaseModel):
@@ -56,12 +56,14 @@ async def parse_party_votes():
         overview = result.get("overview", {})
         pcos_count = overview.get("pcos", {})
         collected_manual_items.append(
-            ManualItem(
-                city_slug=city_slug,
-                three=pcos_count.get("p3", 0),
-                five=pcos_count.get("p5", 0),
-                seven=pcos_count.get("p7", 0),
-                eight=pcos_count.get("p8", 0)
+            dict(
+                ManualItem(
+                    city_slug=city_slug,
+                    three=pcos_count.get("p3", 0),
+                    five=pcos_count.get("p5", 0),
+                    seven=pcos_count.get("p7", 0),
+                    eight=pcos_count.get("p8", 0)
+                )
             )
         )
             
@@ -110,7 +112,7 @@ async def main():
         await upsert_mongo_docs(
             collection_name=settings.manual_votes,
             docs=manual_items,
-            fields=("city_slug",)
+            fields=["city_slug"]
         )
     else:
         logging.error("Not found any manual items!")
