@@ -14,6 +14,7 @@ class Settings(BaseSettings, frozen=True):
     mongo_url: MongoDsn
     election_db_name: str = "election"
     votes_collection: str = "votes"
+    manual_votes: str = "countvotes"
     parties_collection: str = "parties"
     cities_collection: str = "cities"
     cities_json_file: Path = BASE_DIR / "static/cities.json"
