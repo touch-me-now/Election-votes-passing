@@ -30,11 +30,20 @@ class Item(BaseModel):
     update_ts: float
 
 
+class ManualItem(BaseModel):
+    city_slug: str
+    three: int
+    five: int 
+    seven: int 
+    eight: int 
+    
+
 async def parse_party_votes():
     api_client = ElectionAPIClient(election_id=settings.election_id)
 
     cities = await get_cities()
     collected_items = []
+    collected_manual_items = []
 
     for city_meta in cities:
         division_id, region_id, city_slug = city_meta["id"], city_meta["region_id"], city_meta["slug"]
@@ -44,6 +53,20 @@ async def parse_party_votes():
             division_id=division_id  # in this case we sent str, but it's also work!
         )
 
+        overview = result.get("overview", {})
+        pcos_count = overview.get("pcos", {})
+        collected_manual_items.append(
+            dict(
+                ManualItem(
+                    city_slug=city_slug,
+                    three=pcos_count.get("p3", 0),
+                    five=pcos_count.get("p5", 0),
+                    seven=pcos_count.get("p7", 0),
+                    eight=pcos_count.get("p8", 0)
+                )
+            )
+        )
+            
         founded_ballots = None
 
         for b_c in result["ballotCounts"]:
@@ -75,13 +98,24 @@ async def parse_party_votes():
         ]
         collected_items.extend(ballots)
 
-    return collected_items
+    return collected_manual_items, collected_items
 
 
 async def main():
     logging.info("Start parse party votes...")
-    items = await parse_party_votes()
-
+    manual_items, items = await parse_party_votes()
+    
+    if manual_items:
+        logging.info("Saving manual items...")
+        
+        await upsert_mongo_docs(
+            collection_name=settings.manual_votes,
+            docs=manual_items,
+            fields=["city_slug"]
+        )
+    else:
+        logging.error("Not found any manual items!")
+        
     if items:
         logging.info("Saving items...")
 
@@ -98,4 +132,3 @@ if __name__ == "__main__":
     import asyncio
 
     asyncio.run(main())
-
